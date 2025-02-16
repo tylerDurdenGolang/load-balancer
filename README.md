@@ -18,32 +18,32 @@
 ```mermaid
 flowchart TD
     subgraph "Внешний мир"
-      A[Клиент] 
+      A["Клиент"] 
     end
 
     subgraph "Балансировка и входящий трафик"
-      B[Load Balancer]
+      B["Load Balancer"]
     end
 
     subgraph "Приложение"
-      C1[CRUD Service Instance 1]
-      C2[CRUD Service Instance 2]
-      C3[CRUD Service Instance 3]
+      C1["CRUD Service Instance 1"]
+      C2["CRUD Service Instance 2"]
+      C3["CRUD Service Instance 3"]
     end
 
     subgraph "Кеширование"
-      D[Redis Cache]
+      D["Redis Cache"]
     end
 
     subgraph "Мониторинг и прогнозирование"
-      E[Сбор Метрик (Prometheus)]
-      F[Нейросеть для прогнозирования]
-      G[Сервис Оркестрации]
+      E["Сбор Метрик - Prometheus"]
+      F["Нейросеть для прогнозирования"]
+      G["Сервис Оркестрации"]
     end
 
     subgraph "Кластер Kubernetes"
-      H[Kubernetes API]
-      I[Ноды кластера]
+      H["Kubernetes API"]
+      I["Ноды кластера"]
     end
 
     %% Потоки
@@ -57,9 +57,9 @@ flowchart TD
     C3 -->|Запросы кеша| D
 
     %% Сбор метрик
-    C1 -->|Метрики (загрузка, задержки, ошибки)| E
-    C2 -->|Метрики (загрузка, задержки, ошибки)| E
-    C3 -->|Метрики (загрузка, задержки, ошибки)| E
+    C1 -->|Метрики - загрузка, задержки, ошибки| E
+    C2 -->|Метрики - загрузка, задержки, ошибки| E
+    C3 -->|Метрики - загрузка, задержки, ошибки| E
 
     %% Прогнозирование нагрузки
     E -->|Агрегированные метрики| G
@@ -71,3 +71,4 @@ flowchart TD
     I -->|Запускает/останавливает| C1
     I -->|Запускает/останавливает| C2
     I -->|Запускает/останавливает| C3
+
