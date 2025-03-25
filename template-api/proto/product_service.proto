@@ -1,0 +1,72 @@
+// protoc --go_out=./pkg --go_opt=paths=source_relative --go-grpc_out=./pkg --go-grpc_opt=paths=source_relative ./proto/*.proto
+syntax = "proto3";
+
+option go_package = "item/item";
+package item;
+
+// Определяем сервис для работы с товарами
+service ItemService {
+    rpc CreateItem(CreateItemRequest) returns (CreateItemResponse);
+    rpc GetItem(GetItemRequest) returns (GetItemResponse);
+    rpc UpdateItem(UpdateItemRequest) returns (EmptyResponse);
+    rpc DeleteItem(DeleteItemRequest) returns (EmptyResponse);
+    rpc GetAllItems(GetAllItemsRequest) returns (GetAllItemsResponse); // Добавлена ручка для получения всех товаров
+}
+
+// Определяем сообщение Item
+message Item {
+    int64 id = 1; // ID товара
+    string name = 2; // Название товара
+    string description = 3; // Описание товара
+    double price = 4; // Цена товара
+    int64 stock = 5; // Количество на складе
+}
+
+message CreateItemRequest {
+    string name = 1; // Название товара
+    string description = 2; // Описание товара
+    double price = 3; // Цена товара
+    int64 stock = 4; // Количество на складе
+}
+
+// Ответ на создание товара
+message CreateItemResponse {
+    int64 id = 1; // ID товара
+}
+
+// Запрос для получения товара
+message GetItemRequest {
+    int64 id = 1; // ID товара
+}
+
+// Ответ с товаром
+message GetItemResponse {
+    Item item = 1; // Товар
+}
+
+// Определяем сообщение Item
+message UpdateItemRequest {
+    int64 id = 1; // ID товара
+    optional string name = 2; // Название товара
+    optional string description = 3; // Описание товара
+    optional double price = 4; // Цена товара
+    optional int64 stock = 5; // Количество на складе
+}
+
+// Запрос для получения всех товаров
+message GetAllItemsRequest {
+    int64 limit = 1;
+}
+
+// Ответ с товарами
+message GetAllItemsResponse {
+   repeated Item items = 1; // Товары
+}
+
+// Запрос для удаления товара
+message DeleteItemRequest {
+    int64 id = 1; // ID товара
+}
+
+// Пустой ответ
+message EmptyResponse {}
