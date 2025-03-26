@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-balancer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: my-balancer
+  template:
+    metadata:
+      labels:
+        app: my-balancer
+    spec:
+      containers:
+      - name: my-balancer
+        image: my-balancer:latest
+        ports:
+        - containerPort: 8081
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-balancer
+spec:
+  selector:
+    app: my-balancer
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8081
+  type: LoadBalancer
