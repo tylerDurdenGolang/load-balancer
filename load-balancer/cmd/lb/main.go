@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"net"
 
 	"github.com/tylerDurdenGolang/load-balancer/internal/balancer"
 	"github.com/tylerDurdenGolang/load-balancer/internal/config"
@@ -16,7 +17,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to load config: %v", err)
 	}
-
+	addrs, _ := net.LookupHost("template-api")
+	for _, ip := range addrs {
+		fmt.Println("Found pod IP:", ip)
+	}
 	// 2. Инициализация балансировщика (например, Round Robin)
 	lbStrategy, err := balancer.NewStrategy(cfg)
 	if err != nil {

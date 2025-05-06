@@ -1,7 +1,7 @@
 package models
 
 type Item struct {
-	ID          int64     `json:"id"`
+	ID          int64   `json:"id"`
 	Name        string  `json:"name"`
 	Description string  `json:"description"`
 	Price       float64 `json:"price"`
@@ -9,7 +9,7 @@ type Item struct {
 }
 
 type UpdateItem struct {
-	ID          int64      `json:"id"`
+	ID          int64    `json:"id"`
 	Name        *string  `json:"name"`
 	Description *string  `json:"description"`
 	Price       *float64 `json:"price"`

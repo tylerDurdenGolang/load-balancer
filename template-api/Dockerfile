@@ -9,12 +9,12 @@ RUN go mod download
 # Копируем оставшиеся файлы проекта
 COPY . .
 # Сборка бинарного файла из пакета cmd/lb
-RUN go build -o /load-balancer ./cmd/lb
+RUN go build -o /template-api ./cmd
 # Финальный образ
 FROM alpine:3.17
 # Создадим рабочую директорию
 WORKDIR /app
 # Копируем скомпилированный бинарник из предыдущего этапа
-COPY --from=builder /load-balancer /app/load-balancer
+COPY --from=builder /template-apir /app/template-api
 # Запускаем бинарник по умолчанию
-CMD ["/app/load-balancer"]
+CMD ["/app/template-api"]

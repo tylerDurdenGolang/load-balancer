@@ -1,6 +1,6 @@
 module github.com/tylerDurdenGolang/load-balancer
 
-go 1.22.3
+go 1.23
 
 require (
 	go.opentelemetry.io/otel/exporters/jaeger v1.17.0

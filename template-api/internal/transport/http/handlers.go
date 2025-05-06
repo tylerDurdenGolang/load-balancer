@@ -4,7 +4,6 @@ import (
 	"io"
 	"net/http"
 
-	"template-api/internal/models"
 	pb "template-api/pkg/proto"
 
 	"github.com/gin-gonic/gin"
@@ -162,14 +161,14 @@ func (h *Handler) updateItem(c *gin.Context) {
 		h.writeProtoResponse(c, http.StatusBadRequest, st.Proto())
 		return
 	}
-	newItem := &models.UpdateItem{
-		ID:          req.Id,
-		Name:        req.Name,
-		Description: req.Description,
-		Price:       req.Price,
-		Stock:       req.Stock,
-	}
-	err = h.service.UpdateItem(c, newItem)
+	err = h.service.UpdateItem(
+		c,
+		req.Id,
+		req.Name,
+		req.Description,
+		req.Price,
+		req.Stock,
+	)
 	if err != nil {
 		st := status.New(codes.Unknown, err.Error())
 		h.writeProtoResponse(c, http.StatusInternalServerError, st.Proto())

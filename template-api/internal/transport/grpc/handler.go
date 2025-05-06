@@ -2,7 +2,6 @@ package grpc
 
 import (
 	"context"
-	"template-api/internal/models"
 	"template-api/internal/service"
 	pb "template-api/pkg/proto"
 )
@@ -12,8 +11,10 @@ type Handler struct {
 	service service.IService
 }
 
-func NewHandler() *Handler {
-	return &Handler{}
+func NewHandler(service service.IService) *Handler {
+	return &Handler{
+		service: service,
+	}
 }
 
 func (h *Handler) CreateItem(ctx context.Context, req *pb.CreateItemRequest) (*pb.CreateItemResponse, error) {
@@ -61,14 +62,14 @@ func (h *Handler) GetItem(ctx context.Context, req *pb.GetItemRequest) (*pb.GetI
 }
 
 func (h *Handler) UpdateItem(ctx context.Context, req *pb.UpdateItemRequest) (*pb.EmptyResponse, error) {
-	newItem := &models.UpdateItem{
-		ID:          req.Id,
-		Name:        req.Name,
-		Description: req.Description,
-		Price:       req.Price,
-		Stock:       req.Stock,
-	}
-	if err := h.service.UpdateItem(ctx, newItem); err != nil {
+	if err := h.service.UpdateItem(
+		ctx,
+		req.Id,
+		req.Name,
+		req.Description,
+		req.Price,
+		req.Stock,
+	); err != nil {
 		return nil, err
 	}
 	return &pb.EmptyResponse{}, nil
