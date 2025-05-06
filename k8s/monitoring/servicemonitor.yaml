@@ -1,0 +1,14 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: mathcruncher
+  namespace: monitoring
+spec:
+  selector:
+    matchLabels: { app: mathcruncher }
+  namespaceSelector:
+    matchNames: [ mathcruncher ]
+  endpoints:
+    - port: 8080        # или имя порта, если он назван
+      path: /metrics
+      interval: 15s

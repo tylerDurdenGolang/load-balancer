@@ -1,0 +1,17 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: mathcruncher-alerts
+  namespace: monitoring
+spec:
+  groups:
+    - name: mathcruncher.rules
+      rules:
+        - alert: MathcruncherHighLatency
+          expr: histogram_quantile(0.95, rate(mc_req_latency_seconds_bucket[5m])) > 5
+          for: 2m
+          labels:
+            severity: warning
+          annotations:
+            summary: "95‑й перцентиль выше 5 секунд"
+            description: "Проверьте нагрузку или масштабирование."
