@@ -1,0 +1,8 @@
+
+PyYAML>=6
+pydantic>=1
+numpy>=1.22
+kubernetes>=29
+requests>=2
+
+streamlit>=1.30

@@ -1,0 +1,9 @@
+
+deployment: my‑service
+namespace: default
+prometheus_url: http://prometheus:9090
+interval: 30
+scaling:
+  target_rps_per_pod: 100
+  hysteresis: 1
+  max_replicas: 10

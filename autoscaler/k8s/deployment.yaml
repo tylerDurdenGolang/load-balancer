@@ -1,0 +1,29 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: autoscaler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: autoscaler
+  template:
+    metadata:
+      labels:
+        app: autoscaler
+    spec:
+      serviceAccountName: autoscaler
+      containers:
+      - name: autoscaler
+        image: intelligent-autoscaler:latest
+        env:
+        - name: CONFIG
+          value: /etc/autoscaler/config.yaml
+        volumeMounts:
+        - name: config
+          mountPath: /etc/autoscaler
+      volumes:
+      - name: config
+        configMap:
+          name: autoscaler-config
