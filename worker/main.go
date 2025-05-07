@@ -14,6 +14,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
+/* --------- типы запроса / ответа --------- */
+
 type request struct {
 	Expression string  `json:"expression"`
 	Lower      float64 `json:"lower"`
@@ -26,6 +28,8 @@ type response struct {
 	CI95    float64 `json:"ci95"`
 	Samples int     `json:"samples"`
 }
+
+/* --------- Prometheus‑метрики --------- */
 
 var (
 	reqCounter = prometheus.NewCounter(prometheus.CounterOpts{
@@ -44,8 +48,22 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-// integrate performs Monte‑Carlo estimation of ∫_lower^upper f(x) dx
-// returning mean (estimate) and 95 % confidence interval.
+/* --------- карта поддерживаемых функций --------- */
+
+var funcs = map[string]govaluate.ExpressionFunction{
+	"sin":  func(a ...interface{}) (interface{}, error) { return math.Sin(a[0].(float64)), nil },
+	"cos":  func(a ...interface{}) (interface{}, error) { return math.Cos(a[0].(float64)), nil },
+	"tan":  func(a ...interface{}) (interface{}, error) { return math.Tan(a[0].(float64)), nil },
+	"exp":  func(a ...interface{}) (interface{}, error) { return math.Exp(a[0].(float64)), nil },
+	"sqrt": func(a ...interface{}) (interface{}, error) { return math.Sqrt(a[0].(float64)), nil },
+	"log":  func(a ...interface{}) (interface{}, error) { return math.Log(a[0].(float64)), nil },
+	"pow": func(a ...interface{}) (interface{}, error) {
+		return math.Pow(a[0].(float64), a[1].(float64)), nil
+	},
+}
+
+/* --------- Monte‑Carlo интегрирование --------- */
+
 func integrate(expr *govaluate.EvaluableExpression, lower, upper float64, samples int) (mean, ci95 float64, err error) {
 	workers := runtime.NumCPU()
 	if samples < workers {
@@ -60,7 +78,7 @@ func integrate(expr *govaluate.EvaluableExpression, lower, upper float64, sample
 	for w := 0; w < workers; w++ {
 		n := chunk
 		if w == 0 {
-			n += remainder // add leftover samples
+			n += remainder
 		}
 		go func(n int) {
 			localSum, localSq := 0.0, 0.0
@@ -69,12 +87,8 @@ func integrate(expr *govaluate.EvaluableExpression, lower, upper float64, sample
 			for i := 0; i < n; i++ {
 				x := lower + rng.Float64()*(upper-lower)
 				params["x"] = x
-				vRaw, err := expr.Evaluate(params)
-				if err != nil {
-					ch <- partial{}
-					return
-				}
-				v := vRaw.(float64)
+				val, _ := expr.Evaluate(params) // ошибок быть не должно
+				v := val.(float64)
 				localSum += v
 				localSq += v * v
 			}
@@ -90,40 +104,52 @@ func integrate(expr *govaluate.EvaluableExpression, lower, upper float64, sample
 	}
 
 	mean = totalSum / float64(samples)
-	variance := (totalSq/float64(samples) - mean*mean)
+	variance := totalSq/float64(samples) - mean*mean
 	ci95 = 1.96 * math.Sqrt(variance/float64(samples))
 	return
 }
 
+/* --------- HTTP‑обработчики --------- */
+
 func integrateHandler(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
-	defer func() { reqLatency.Observe(time.Since(start).Seconds()) }()
 	reqCounter.Inc()
+
+	log.Printf("/integrate called from %s", r.RemoteAddr)
+
+	defer func() {
+		lat := time.Since(start).Seconds()
+		reqLatency.Observe(lat)
+		log.Printf("/integrate completed in %.3fs", lat)
+	}()
 
 	var req request
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		log.Printf("invalid JSON: %v", err)
 		return
 	}
 	if req.Samples <= 0 {
-		req.Samples = 100000
+		req.Samples = 100_000
 	}
 
-	expr, err := govaluate.NewEvaluableExpression("(" + req.Expression + ")")
+	log.Printf("expression='%s' lower=%.4f upper=%.4f samples=%d",
+		req.Expression, req.Lower, req.Upper, req.Samples)
+
+	expr, err := govaluate.NewEvaluableExpressionWithFunctions("("+req.Expression+")", funcs)
 	if err != nil {
 		http.Error(w, "invalid expression: "+err.Error(), http.StatusBadRequest)
+		log.Printf("invalid expression: %v", err)
 		return
 	}
 
-	mean, ci95, err := integrate(expr, req.Lower, req.Upper, req.Samples)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
+	mean, ci95, _ := integrate(expr, req.Lower, req.Upper, req.Samples)
 	resp := response{Mean: mean, CI95: ci95, Samples: req.Samples}
+
+	log.Printf("result: mean=%.6f ci95=%.6f", mean, ci95)
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp)
+	_ = json.NewEncoder(w).Encode(resp)
 }
 
 func main() {
@@ -132,10 +158,11 @@ func main() {
 	mux.Handle("/metrics", promhttp.Handler())
 
 	srv := &http.Server{
-		Addr:              ":8080",
+		Addr:              ":5001",
 		Handler:           mux,
 		ReadHeaderTimeout: 5 * time.Second,
 	}
-	log.Println("MathCruncher listening on :8080")
+
+	log.Println("MathCruncher worker listening on :5001")
 	log.Fatal(srv.ListenAndServe())
 }

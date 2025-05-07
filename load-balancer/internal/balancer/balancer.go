@@ -1,5 +1,7 @@
 package balancer
 
+import "github.com/tylerDurdenGolang/load-balancer/internal/domain"
+
 // IBalancer — интерфейс для выбора бэкенда.
 // Можно дополнить методами для управления состоянием бэкендов.
 type IBalancer interface {
@@ -7,4 +9,5 @@ type IBalancer interface {
 	MarkBackendDown(backend string)
 	MarkBackendUp(backend string)
 	GetAllBackends() []string
+	ReplaceBackends(newList []*domain.Backend)
 }

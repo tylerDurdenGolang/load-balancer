@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mathcruncher
+  namespace: mathcruncher
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: mathcruncher }
+  template:
+    metadata:
+      labels: { app: mathcruncher }
+      annotations:
+        # ⬇︎ Prometheus будет скрапить эти энт‑пойнты, даже без ServiceMonitor
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: /metrics
+    spec:
+      containers:
+        - name: mathcruncher
+          image: mathcruncher/worker:dev   # ← локальный тег
+          imagePullPolicy: Never          # ← не pull‑ить из registry
+          ports:
+            - containerPort: 8080
+          resources:                     # базовые лимиты
+            requests:
+              cpu: "250m"
+              memory: "128Mi"
+            limits:
+              cpu: "1"
+              memory: "256Mi"
+          readinessProbe:
+            httpGet: { path: /metrics, port: 8080 }
+            initialDelaySeconds: 5
+            periodSeconds: 10

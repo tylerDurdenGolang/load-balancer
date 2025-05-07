@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: custom-lb
+  namespace: mathcruncher
+spec:
+  type: NodePort        # или LoadBalancer, если поддерживается
+  selector:
+    app: custom-lb      # должно совпадать с label в Deployment
+  ports:
+    - port: 8000            # порт, по которому обращаются клиенты
+      targetPort: 8000      # порт внутри контейнера
+      nodePort: 30080       # (опционально) зафиксировать внешний порт

@@ -39,40 +39,47 @@ func (r *RoundRobin) GetBackend() (string, error) {
 }
 
 func (r *RoundRobin) MarkBackendDown(backend string) {
-    // Удаляем (или помечаем) backend как «упавший»
-    // Для простоты — уберём из списка
-    r.mutex.Lock()
-    defer r.mutex.Unlock()
+	// Удаляем (или помечаем) backend как «упавший»
+	// Для простоты — уберём из списка
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
 
-    newList := make([]*domain.Backend, 0, len(r.backends))
-    for _, b := range r.backends {
-        if b.Host() != backend {
-            newList = append(newList, b)
-        }
-    }
-    r.backends = newList
+	newList := make([]*domain.Backend, 0, len(r.backends))
+	for _, b := range r.backends {
+		if b.Host() != backend {
+			newList = append(newList, b)
+		}
+	}
+	r.backends = newList
 }
 
 func (r *RoundRobin) MarkBackendUp(backend string) {
-    // Если бэкенд отсутствует в списке, добавим его
-    r.mutex.Lock()
-    defer r.mutex.Unlock()
+	// Если бэкенд отсутствует в списке, добавим его
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
 
-    for _, b := range r.backends {
-        if b.Host() == backend {
-            return // уже есть
-        }
-    }
-    r.backends = append(r.backends, domain.NewBackend(backend))
+	for _, b := range r.backends {
+		if b.Host() == backend {
+			return // уже есть
+		}
+	}
+	r.backends = append(r.backends, domain.NewBackend(backend))
 }
 
 func (r *RoundRobin) GetAllBackends() []string {
-    r.mutex.Lock()
-    defer r.mutex.Unlock()
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
 
-    result := make([]string, len(r.backends))
-    for i, b := range r.backends {
-        result[i] = b.Host()
-    }
-    return result
+	result := make([]string, len(r.backends))
+	for i, b := range r.backends {
+		result[i] = b.Host()
+	}
+	return result
+}
+
+func (r *RoundRobin) ReplaceBackends(newList []*domain.Backend) {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
+	r.backends = newList
+	r.current = 0
 }

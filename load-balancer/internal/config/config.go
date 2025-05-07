@@ -10,7 +10,7 @@ import (
 type Config struct {
 	ListenAddr          string        `yaml:"listen_addr"`
 	Algorithm           string        `yaml:"algorithm"`
-	Backends            []string      `yaml:"backends"`
+	WorkerPort          int           `yaml:"worker_port"`
 	HealthCheckInterval time.Duration `yaml:"health_check_interval"`
 }
 

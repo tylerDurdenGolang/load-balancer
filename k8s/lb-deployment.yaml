@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: custom-lb
+  namespace: mathcruncher
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: custom-lb
+  template:
+    metadata:
+      labels:
+        app: custom-lb
+    spec:
+      containers:
+        - name: lb
+          image: mathcruncher/lb:dev
+          ports:
+            - containerPort: 8000
+          volumeMounts:
+            - mountPath: /app/config
+              name: config
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: lb-config               # предварительно созданный ConfigMap

@@ -1,17 +1,12 @@
 package balancer
 
 import (
-	strategies "github.com/tylerDurdenGolang/load-balancer/internal/balancer/strategies"
-	"github.com/tylerDurdenGolang/load-balancer/internal/config"
+	"github.com/tylerDurdenGolang/load-balancer/internal/balancer/strategies"
 	"github.com/tylerDurdenGolang/load-balancer/internal/domain"
 )
 
-func NewStrategy(config *config.Config) (IBalancer, error) {
-	backends := make([]*domain.Backend, len(config.Backends))
-	for i, backend := range config.Backends {
-		backends[i] = domain.NewBackend(backend)
-	}
-	switch config.Algorithm {
+func NewStrategy(algorithms string, backends []*domain.Backend) (IBalancer, error) {
+	switch algorithms {
 	// case "fuzzy":
 	// 	return adaptive_fuzzy.New(config.Backends), nil
 	// case "queuing":

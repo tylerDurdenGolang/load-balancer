@@ -1,20 +1,25 @@
-# Этап сборки
+# -------- Этап сборки --------
 FROM golang:1.23 AS builder
-# Создадим рабочую директорию внутри контейнера
+
 WORKDIR /app
-# Копируем файлы go.mod и go.sum
+
+# Копируем go.mod и go.sum отдельно для кеша зависимостей
 COPY go.mod go.sum ./
-# Загружаем модули
 RUN go mod download
-# Копируем оставшиеся файлы проекта
+
+# Копируем остальной код
 COPY . .
-# Сборка бинарного файла из пакета cmd/lb
-RUN go build -o /load-balancer ./cmd/lb
-# Финальный образ
+
+# Сборка бинарника без CGO, для запуска в Alpine
+RUN CGO_ENABLED=0 GOOS=linux go build -o /load-balancer ./cmd/lb
+
+# -------- Минималистичный финальный образ --------
 FROM alpine:3.17
-# Создадим рабочую директорию
+
 WORKDIR /app
-# Копируем скомпилированный бинарник из предыдущего этапа
-COPY --from=builder /load-balancer /app/load-balancer
-# Запускаем бинарник по умолчанию
-CMD ["/app/load-balancer"]
+
+# Копируем бинарник из билдера
+COPY --from=builder /load-balancer ./load-balancer
+
+# Устанавливаем точку входа
+CMD ["./load-balancer"]

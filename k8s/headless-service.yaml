@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: template-api       # 👈 это будет имя, по которому LookupHost ищет
+  namespace: mathcruncher
+spec:
+  clusterIP: None          # 👈 делает Service "headless"
+  selector:
+    app: mathcruncher      # 👈 label подов вашего воркера
+  ports:
+    - port: 8080
+      targetPort: 8080
