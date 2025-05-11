@@ -4,7 +4,7 @@ metadata:
   name: mathcruncher
   namespace: mathcruncher
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels: { app: mathcruncher }
   template:
@@ -22,12 +22,12 @@ spec:
           imagePullPolicy: Never          # ← не pull‑ить из registry
           ports:
             - containerPort: 8080
-          resources:                     # базовые лимиты
+          resources:
             requests:
-              cpu: "250m"
-              memory: "128Mi"
+              cpu: "120m"        # p95
+              memory: "160Mi"    # peak+20 %
             limits:
-              cpu: "1"
+              cpu: "500m"        # 4 × request
               memory: "256Mi"
           readinessProbe:
             httpGet: { path: /metrics, port: 8080 }
