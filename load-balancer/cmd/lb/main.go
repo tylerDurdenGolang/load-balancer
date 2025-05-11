@@ -2,15 +2,13 @@ package main
 
 import (
 	"fmt"
-	"log"
-	"net"
-	"time"
-
 	"github.com/tylerDurdenGolang/load-balancer/internal/balancer"
 	"github.com/tylerDurdenGolang/load-balancer/internal/config"
 	"github.com/tylerDurdenGolang/load-balancer/internal/domain"
 	"github.com/tylerDurdenGolang/load-balancer/internal/healthcheck"
 	"github.com/tylerDurdenGolang/load-balancer/internal/server"
+	"log"
+	"net"
 )
 
 func main() {
@@ -42,16 +40,16 @@ func main() {
 
 	/* ---------- 5. Динамический DNS‑refresh ---------- */
 
-	go func() {
-		ticker := time.NewTicker(10 * time.Second)
-		defer ticker.Stop()
-
-		for range ticker.C {
-			newBack := resolveBackends("template-api", cfg.WorkerPort)
-			lb.ReplaceBackends(newBack) // метод реализован в стратегии
-			log.Printf("backend list refreshed: %d pods", len(newBack))
-		}
-	}()
+	//go func() {
+	//	ticker := time.NewTicker(10 * time.Second)
+	//	defer ticker.Stop()
+	//
+	//	for range ticker.C {
+	//		newBack := resolveBackends("template-api", cfg.WorkerPort)
+	//		lb.ReplaceBackends(newBack) // метод реализован в стратегии
+	//		log.Printf("backend list refreshed: %d pods", len(newBack))
+	//	}
+	//}()
 
 	/* ---------- 6. HTTP‑сервер ---------- */
 

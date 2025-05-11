@@ -1,5 +1,5 @@
 
-from autoscaler.scaler import AutoScaler, ScalingConfig
+from ..autoscaler.scaler import AutoScaler, ScalingConfig
 
 def test_scaler_increases_when_overloaded():
     sc = AutoScaler(ScalingConfig(target_rps_per_pod=100, max_replicas=5))

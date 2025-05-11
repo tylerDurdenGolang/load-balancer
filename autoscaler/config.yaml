@@ -1,9 +1,9 @@
 
-deployment: my‑service
-namespace: default
-prometheus_url: http://prometheus:9090
-interval: 30
+deployment: mathcruncher
+namespace: mathcruncher
+prometheus_url: http://monitoring-kube-prometheus-prometheus.monitoring:9090
+interval: 5
 scaling:
-  target_rps_per_pod: 100
+  target_rps_per_pod: 300
   hysteresis: 1
   max_replicas: 10

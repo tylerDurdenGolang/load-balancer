@@ -1,8 +1,59 @@
-
+# ------------------- ServiceAccount + RBAC -------------------
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: autoscaler
+  namespace: mathcruncher
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: autoscaler
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "services", "endpoints"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["autoscaling"]
+    resources: ["horizontalpodautoscalers"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments/scale"]
+    verbs: ["get", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: autoscaler
+subjects:
+  - kind: ServiceAccount
+    name: autoscaler
+    namespace: mathcruncher
+roleRef:
+  kind: ClusterRole
+  name: autoscaler
+  apiGroup: rbac.authorization.k8s.io
+---
+# ------------------- ConfigMap с конфигом -------------------
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: autoscaler-config
+  namespace: mathcruncher
+data:
+  config.yaml: |
+    listen_addr: ":9000"
+    target_deployment: mathcruncher
+    metric: mc_req_latency_seconds_p95
+    threshold: 2s
+    min_replicas: 1
+    max_replicas: 10
+---
+# ------------------- Deployment -------------------
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: autoscaler
+  namespace: mathcruncher
 spec:
   replicas: 1
   selector:
@@ -15,15 +66,31 @@ spec:
     spec:
       serviceAccountName: autoscaler
       containers:
-      - name: autoscaler
-        image: intelligent-autoscaler:latest
-        env:
-        - name: CONFIG
-          value: /etc/autoscaler/config.yaml
-        volumeMounts:
-        - name: config
-          mountPath: /etc/autoscaler
+        - name: autoscaler
+          image: mathcruncher/autoscaler:dev
+          imagePullPolicy: Never
+          env:
+            - name: TARGET_NAMESPACE
+              value: mathcruncher
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "64Mi"
+            limits:
+              cpu: "500m"
+              memory: "128Mi"
+          volumeMounts:
+            - name: config
+              mountPath: /etc/autoscaler
+          startupProbe:                             # 🔄 только при старте
+            httpGet:
+              path: /ready
+              port: 8081
+            initialDelaySeconds: 3                  # ⏳ подождать 3 сек
+            periodSeconds: 2                        # 🔁 опрашивать каждые 2 сек
+            timeoutSeconds: 1                       # ⌛️ ждать не более 1 сек
+            failureThreshold: 10                    # ❌ макс. 10 попыток (20 сек)
       volumes:
-      - name: config
-        configMap:
-          name: autoscaler-config
+        - name: config
+          configMap:
+            name: autoscaler-config

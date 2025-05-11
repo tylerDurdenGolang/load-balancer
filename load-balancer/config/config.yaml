@@ -1,4 +1,4 @@
-listen_addr: ":8080"
+listen_addr: ":8000"
 algorithm: ""
 health_check_interval: 2s
 worker_port: 5001

@@ -152,17 +152,25 @@ func integrateHandler(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(resp)
 }
 
+func readyHandler(w http.ResponseWriter, r *http.Request) {
+	// Если нужно более сложное условие (например, проверка подключения к БД),
+	// добавьте его здесь. Сейчас просто говорим «я жив и готов».
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write([]byte("OK"))
+}
+
 func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/integrate", integrateHandler)
+	mux.HandleFunc("/ready", readyHandler)
 	mux.Handle("/metrics", promhttp.Handler())
 
 	srv := &http.Server{
-		Addr:              ":5001",
+		Addr:              ":8080",
 		Handler:           mux,
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
-	log.Println("MathCruncher worker listening on :5001")
+	log.Println("MathCruncher worker listening on :8080")
 	log.Fatal(srv.ListenAndServe())
 }

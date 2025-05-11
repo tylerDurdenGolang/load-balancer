@@ -1,6 +1,6 @@
 
 import numpy as np
-from autoscaler.predictor import ARPredictor
+from ..autoscaler.predictor import ARPredictor
 
 def test_predictor_converges():
     p = ARPredictor(p=2)

@@ -8,8 +8,14 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: mathcruncher
-  minReplicas: 2
-  maxReplicas: 10
+  minReplicas: 1           # ← старт с 1 реплики
+  maxReplicas: 10         # ← запас под пик
+  behavior:                # ← ускоряем scale-up
+    scaleUp:
+      policies:
+        - type: Pods
+          value: 5           # +до 5 за шаг
+          periodSeconds: 15
   metrics:
     - type: Resource
       resource:
