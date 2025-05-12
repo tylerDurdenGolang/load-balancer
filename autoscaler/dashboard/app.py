@@ -1,8 +1,8 @@
 import os, time, requests, streamlit as st
 import pandas as pd
 import numpy as np
-from autoscaler.predictor import ARPredictor
-from autoscaler.scaler import AutoScaler, ScalingConfig
+from ..autoscaler.predictor import ARPredictor
+from ..autoscaler.scaler import AutoScaler, ScalingConfig
 
 # ------------------ Настройка Prometheus live ------------------
 PROM_URL = os.getenv("PROMETHEUS_URL", "http://localhost:9090")

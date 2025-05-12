@@ -1,5 +1,4 @@
-
-"""Adaptive AR(p) predictor using Recursive Least Squares."""
+"""Adaptive AR(p) predictor using Recursive Least Squares with safety checks."""
 import numpy as np
 
 class ARPredictor:
@@ -7,10 +6,9 @@ class ARPredictor:
         self.p = p
         self.forgetting = forgetting
         self.phi = np.zeros(p)
-        self.P = np.eye(p) * 1_000.0
+        self.P = np.eye(p) * 1000.0
         self.history = []
 
-    # online update with new observation
     def update(self, new_value: float) -> None:
         if len(self.history) < self.p:
             self.history.append(new_value)
@@ -21,15 +19,22 @@ class ARPredictor:
         error = new_value - y_hat
 
         Px = self.P @ x
-        k = Px / (self.forgetting + x @ Px)
+        denominator = self.forgetting + x @ Px
+        if denominator == 0:  # edge case
+            return
 
+        k = Px / denominator
         self.phi += k * error
+
         self.P = (self.P - np.outer(k, x) @ self.P) / self.forgetting
         self.history.append(new_value)
 
-    # one‑step forecast
+        # стабилизация коэффициентов (опционально)
+        self.phi = np.clip(self.phi, -10, 10)
+
     def predict(self):
         if len(self.history) < self.p:
             return None
         x = np.array(self.history[-self.p:][::-1])
-        return float(self.phi @ x)
+        y_pred = float(self.phi @ x)
+        return max(y_pred, 0.0)  # защита от отрицательного предсказания

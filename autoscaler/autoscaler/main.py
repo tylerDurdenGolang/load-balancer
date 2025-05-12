@@ -25,7 +25,6 @@ class ReadinessHandler(BaseHTTPRequestHandler):
             self.end_headers()
 
     def log_message(self, format, *args):
-        # отключаем спам от /ready
         if self.path != "/ready":
             super().log_message(format, *args)
 
@@ -54,28 +53,37 @@ def run():
     threading.Thread(target=start_readiness_server, daemon=True).start()
 
     while True:
-        rps = prom.query_instant(expr_total)
-        rps_by_instance = prom.query_instant(expr_by_instance)
+        try:
+            rps = prom.query_instant(expr_total)
+            rps_by_instance = prom.query_instant(expr_by_instance)
 
-        if isinstance(rps_by_instance, dict):
-            logging.info("RPS per instance:")
-            for instance, val in rps_by_instance.items():
-                logging.info("  → %s: %.1f", instance, val)
+            if isinstance(rps_by_instance, dict):
+                logging.info("RPS per instance:")
+                for instance, val in rps_by_instance.items():
+                    logging.info("  → %s: %.1f", instance, val)
                 logging.info("Total RPS: %.1f", sum(rps_by_instance.values()))
-        elif isinstance(rps_by_instance, float):
-            logging.info("RPS (single result): %.1f", rps_by_instance)
+            elif isinstance(rps_by_instance, float):
+                logging.info("RPS (single result): %.1f", rps_by_instance)
 
-        if rps is not None:
-            predictor.update(rps)
-            pred = predictor.predict() or rps
-            desired = scaler.optimise(pred, current_replicas)
-            if desired != current_replicas:
+            if rps is not None:
+                predictor.update(rps)
+                pred = predictor.predict() or rps
+
+                desired = scaler.optimise(pred, current_replicas)
                 logging.info(
-                    "Scaling %s/%s from %d → %d (predicted RPS %.1f)",
-                    cfg.namespace, cfg.deployment, current_replicas, desired, pred,
+                    "DEBUG  rps=%.1f pred=%.1f cur=%d des=%d target=%d",
+                    rps, pred, current_replicas, desired, scaler.cfg.target_rps_per_pod
                 )
-                patch_replicas(cfg.namespace, cfg.deployment, desired)
-                current_replicas = desired
+                if desired != current_replicas:
+                    logging.info(
+                        "Scaling %s/%s from %d → %d (predicted RPS %.1f)",
+                        cfg.namespace, cfg.deployment, current_replicas, desired, pred,
+                    )
+                    patch_replicas(cfg.namespace, cfg.deployment, desired)
+                    current_replicas = desired
+
+        except Exception as e:
+            logging.exception("Autoscaler error: %s", e)
 
         time.sleep(cfg.interval)
 

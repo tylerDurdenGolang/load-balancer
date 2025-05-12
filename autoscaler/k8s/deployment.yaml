@@ -45,8 +45,14 @@ data:
     target_deployment: mathcruncher
     metric: mc_req_latency_seconds_p95
     threshold: 2s
-    min_replicas: 1
-    max_replicas: 10
+    deployment: mathcruncher
+    namespace: mathcruncher
+    prometheus_url: http://monitoring-kube-prometheus-prometheus.monitoring:9090
+    interval: 3
+    scaling:
+      target_rps_per_pod: 300
+      hysteresis: 1
+      max_replicas: 10
 ---
 # ------------------- Deployment -------------------
 apiVersion: apps/v1
