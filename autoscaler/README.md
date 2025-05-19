@@ -25,6 +25,6 @@ streamlit run dashboard/app.py
 Or with Docker:
 
 ```bash
-docker build -f Dockerfile.dashboard -t autoscaler-dashboard .
+docker build -f Dockerfile -t autoscaler-dashboard .
 docker run -p 8501:8501 -e PROMETHEUS_URL=http://prometheus:9090 autoscaler-dashboard
 ```
