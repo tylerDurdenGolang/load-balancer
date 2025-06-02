@@ -50,7 +50,7 @@ data:
     prometheus_url: http://monitoring-kube-prometheus-prometheus.monitoring:9090
     interval: 3
     scaling:
-      target_rps_per_pod: 300
+      target_rps_per_pod: 100
       hysteresis: 1
       max_replicas: 10
 ---
